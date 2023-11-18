@@ -5,6 +5,8 @@ services:
     container_name: mysql-xwiki
     networks:
       - xwiki-nw
+    ports:
+      - "3306:3306"
     volumes:
       - ./mysql:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
@@ -33,6 +35,23 @@ services:
       DB_PASSWORD: xwiki
       DB_DATABASE: xwiki
       DB_HOST: mysql-xwiki
+
+  apereo:
+    image: apereo/cas:6.6.11
+    container_name: apereo
+    depends_on:
+      - mysql-xwiki
+    networks:
+      - xwiki-nw
+    ports:
+      - "18080:8080"
+      - "18443:8443"
+    # volumes:
+    #   - ./cas/config:/etc/cas/config
+    # environment:
+    #   - CAS_SERVER_NAME=https://xwiki.mv
+    #   - CAS_SERVER_PREFIX=https://xwiki.mv/cas
+
 
 networks:
   xwiki-nw:

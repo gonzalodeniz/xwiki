@@ -1,6 +1,6 @@
 # XWIKI
 
-## Instalación
+## Instalación xwiki
 
 Descarga la imagen xwiki
 
@@ -14,7 +14,7 @@ Prepara el entorno antes de crear los contenedores. Esto solo hay que ejecutarlo
 ./preparacion_entorno.sh
 ```
 
-### Instalación usando docker-run
+### Instalación xwiki usando docker-run
 
 Crea una red dedicada para xwiki
 
@@ -48,7 +48,7 @@ mysql -uxwiki -pxwiki
 ```
 
 
-### Instalación usando docker-compose
+### Instalación xwiki usando docker-compose
 
 Antes de lanzar docker-compose compruebas que haz creado las carpetas con el script "preparacion_entorno.sh".
 
@@ -71,6 +71,14 @@ Email: gdeniz@inerza.com
 ```
 
 En la segundo paso instala Flavor que viene por defecto.
+
+## Apereo / CAS
+
+Descarga la imagen de apereo
+
+```
+docker pull apereo/cas
+```
 
 ## Referencias
 - https://xwiki.com/en/Blog/HowtoinstallXWikiusingDocker/
