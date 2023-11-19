@@ -36,22 +36,19 @@ services:
       DB_DATABASE: xwiki
       DB_HOST: mysql-xwiki
 
-  apereo:
-    image: apereo/cas:6.6.11
+  apereo:    
+    image: apereo/cas:v5.0.6
     container_name: apereo
     depends_on:
       - mysql-xwiki
     networks:
       - xwiki-nw
     ports:
-      - "18080:8080"
-      - "18443:8443"
-    # volumes:
-    #   - ./cas/config:/etc/cas/config
-    # environment:
-    #   - CAS_SERVER_NAME=https://xwiki.mv
-    #   - CAS_SERVER_PREFIX=https://xwiki.mv/cas
-
+      - ${CAS_HTTP_PORT:-9080}:8080
+      - ${CAS_HTTPS_PORT:-9443}:8443
+    volumes:
+    -  ./cas-config/config/:/cas-overlay/etc/cas/config/
+    -  ./cas-config/resources/application.properties:/cas-overlay/src/main/resources/application.properties
 
 networks:
   xwiki-nw:
