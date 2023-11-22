@@ -1,0 +1,7 @@
+FROM xwiki:lts-mysql-tomcat
+
+# Copia los ficheros de authenticator_jasig_cas
+COPY ./authenticator_jasig_cas/org.xwiki.contrib.authentication_authenticator-jasig-cas_1.0.jar /usr/local/tomcat/webapps/ROOT/WEB-INF/lib/
+
+# Copia los ficheros del cliente cas
+COPY ./java-cas-client-4.0.3-jar/cas-client-core-4.0.3.jar /usr/local/tomcat/webapps/ROOT/WEB-INF/lib/

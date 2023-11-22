@@ -20,7 +20,9 @@ services:
       explicit-defaults-for-timestamp: '1'
 
   xwiki:
-    image: xwiki:lts-mysql-tomcat
+    build:
+      context: .
+      dockerfile: dockerfile_xwiki
     container_name: xwiki
     depends_on:
       - mysql-xwiki

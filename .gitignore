@@ -1,2 +1,8 @@
-data_xwiki/
+data_xwiki/*
 mysql/
+java-cas-client-4.0.3/
+
+# Ficheros permitidos en data_xwiki
+!data_xwiki/data/xwiki.cfg
+!data_xwiki/data/xwiki.properties
+!data_xwiki/data/configuration.properties
