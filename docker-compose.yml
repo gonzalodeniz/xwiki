@@ -1,15 +1,15 @@
 version: '3.8'
 services:
-  mysql-xwiki:
+  xwiki-mysql:
     image: mysql:5.7
-    container_name: mysql-xwiki
+    container_name: xwiki-mysql
     networks:
-      - xwiki-nw
+      - xwiki-network
     ports:
       - "3306:3306"
     volumes:
-      - ./mysql:/var/lib/mysql
-      - ./mysql-init:/docker-entrypoint-initdb.d
+      - ./mysql_data:/var/lib/mysql
+      - ./mysql-config:/docker-entrypoint-initdb.d
     environment:
       MYSQL_ROOT_PASSWORD: xwiki
       MYSQL_USER: xwiki
@@ -20,31 +20,32 @@ services:
       explicit-defaults-for-timestamp: '1'
 
   xwiki:
-    build:
-      context: .
-      dockerfile: dockerfile_xwiki
+    # build:
+    #   context: .
+    #   dockerfile: dockerfile_xwiki
+    image: xwiki:lts-mysql-tomcat
     container_name: xwiki
     depends_on:
-      - mysql-xwiki
+      - xwiki-mysql
     networks:
-      - xwiki-nw
+      - xwiki-network
     ports:
       - "8080:8080"
     volumes:
-      - ./data_xwiki:/usr/local/xwiki
+      - ./xwiki_data:/usr/local/xwiki
     environment:
       DB_USER: xwiki
       DB_PASSWORD: xwiki
       DB_DATABASE: xwiki
-      DB_HOST: mysql-xwiki
+      DB_HOST: xwiki-mysql
 
-  apereo:    
+  xwiki-apereo:    
     image: apereo/cas:v5.0.6
-    container_name: apereo
+    container_name: xwiki-apereo
     depends_on:
-      - mysql-xwiki
+      - xwiki-mysql
     networks:
-      - xwiki-nw
+      - xwiki-network
     ports:
       - ${CAS_HTTP_PORT:-9080}:8080
       - ${CAS_HTTPS_PORT:-9443}:8443
@@ -53,5 +54,5 @@ services:
     -  ./cas-config/resources/application.properties:/cas-overlay/src/main/resources/application.properties
 
 networks:
-  xwiki-nw:
+  xwiki-network:
     driver: bridge
