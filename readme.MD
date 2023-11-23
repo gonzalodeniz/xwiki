@@ -10,15 +10,18 @@ docker-compose up -d
 
 ### Configuración inicial de xwiki
 
-Introduce los datos del usuario admin:
+Paso 1: Introduce los datos del usuario admin:
 
 ```
 First Name: admin
 Last Name:
 Username: admin
 Password: 1q2w3e4R.
-Email: admin@mail.com
+
 ```
+
+Paso 2: Instala XWiki Standard Flavor
+
 
 Comprueba si se ejecuta correctamente (xwiki.mv es un nombre local de dns que apunta a la máquina donde está instalado xwiki)
 
