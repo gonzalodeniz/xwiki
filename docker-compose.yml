@@ -35,6 +35,8 @@ services:
           - xwiki      
     ports:
       - "8080:8080"
+    extra_hosts:
+      - "xwiki.mv: 192.168.56.101"      
     volumes:
       - ./xwiki_data:/usr/local/xwiki
     environment:
@@ -48,6 +50,8 @@ services:
     container_name: xwiki-cas
     depends_on:
       - xwiki-mysql
+    extra_hosts:
+      - "xwiki.mv: 192.168.56.101"      
     networks:
       xwiki-network:
         aliases:
@@ -59,6 +63,28 @@ services:
     -  ./cas-config/config/:/cas-overlay/etc/cas/config/
     -  ./cas-config/resources/application.properties:/cas-overlay/src/main/resources/application.properties
 
+  xwiki-httpd:
+    build:
+      context: ./build-httpd
+    container_name: xwiki-httpd
+    ports:
+      - 443:443
+      - 80:80
+    volumes:
+      - xwiki_httpd_conf:/usr/local/apache2/conf
+      - xwiki_httpd_log:/usr/local/apache2/logs
+    extra_hosts:
+      - "xwiki.mv: 192.168.56.101"
+    networks:
+      xwiki-network:
+        aliases:
+          - httpd
+
 networks:
   xwiki-network:
     driver: bridge
+
+volumes:
+  xwiki_httpd_conf:
+  xwiki_httpd_log:
+
