@@ -1,0 +1,1 @@
+docker volume rm xwiki_xwiki_httpd_conf
