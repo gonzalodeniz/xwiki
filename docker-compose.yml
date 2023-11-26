@@ -48,8 +48,6 @@ services:
   xwiki-cas:    
     image: apereo/cas:v5.0.6
     container_name: xwiki-cas
-    depends_on:
-      - xwiki-mysql
     extra_hosts:
       - "xwiki.mv: 192.168.56.101"      
     networks:
@@ -60,8 +58,10 @@ services:
       - ${CAS_HTTP_PORT:-9080}:8080
       - ${CAS_HTTPS_PORT:-9443}:8443
     volumes:
-    -  ./cas-config/config/:/cas-overlay/etc/cas/config/
-    -  ./cas-config/resources/application.properties:/cas-overlay/src/main/resources/application.properties
+    - ./cas-config/config/:/cas-overlay/etc/cas/config/
+    - ./cas-config/application.properties:/cas-overlay/src/main/resources/application.properties
+    - ./cas-config/thekeystore:/etc/cas/thekeystore
+    - ./cas-config/xwiki-10001000.json:/cas-overlay/src/main/resources/services/xwiki-10001000.json
 
   xwiki-httpd:
     build:
@@ -71,8 +71,8 @@ services:
       - 443:443
       - 80:80
     volumes:
-      - xwiki_httpd_conf:/usr/local/apache2/conf
-      - xwiki_httpd_log:/usr/local/apache2/logs
+      - httpd_conf:/usr/local/apache2/conf
+      - httpd_log:/usr/local/apache2/logs
     extra_hosts:
       - "xwiki.mv: 192.168.56.101"
     networks:
@@ -85,6 +85,6 @@ networks:
     driver: bridge
 
 volumes:
-  xwiki_httpd_conf:
-  xwiki_httpd_log:
+  httpd_conf:
+  httpd_log:
 
