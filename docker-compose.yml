@@ -86,6 +86,25 @@ services:
         aliases:
           - httpd
 
+  xwiki-httpd-gobcan:
+    build:
+      context: ./build-httpd-gobcan
+    container_name: xwiki-httpd-gobcan
+    ports:
+      - 10443:10443
+      - 10080:10080
+    volumes:
+      - ./build-httpd-gobcan/httpd.conf:/usr/local/apache2/conf/httpd.conf
+      - httpd_conf-gobcan:/usr/local/apache2/conf
+      - httpd_log-gobcan:/usr/local/apache2/logs
+    extra_hosts:
+      - "xwiki.mv: 192.168.56.101"
+    networks:
+      xwiki-network:
+        aliases:
+          - httpd-gobcan
+
+
 networks:
   xwiki-network:
     driver: bridge
@@ -94,5 +113,7 @@ volumes:
   mysql_data:
   httpd_conf:
   httpd_log:
+  httpd_conf-gobcan:
+  httpd_log-gobcan:
   xwiki_data:
 
