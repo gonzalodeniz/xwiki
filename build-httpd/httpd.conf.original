@@ -241,7 +241,7 @@ ServerAdmin you@example.com
 #
 # If your host doesn't have a registered DNS name, enter its IP address here.
 #
-# ServerName xwiki.mv
+ServerName xwiki.mv
 
 #
 # Deny access to the entirety of your server's filesystem. You must
@@ -580,24 +580,22 @@ SSLRandomSeed connect builtin
 #         CASAuthNHeader Remote-User
 # </Location>
 
-<VirtualHost *:80>
-  ServerName xwiki.mv
-  ServerAlias *.xwiki.mv
-
-  RewriteEngine On
-  RewriteCond %{HTTPS} off
-  RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
-</VirtualHost>
+RemoteIPHeader X-Forwarded-For
+<Location "/aplicaciones/xwiki/">
+        ProxyPreserveHost On        
+        ProxyPass  http://xwiki:8080/
+        ProxyPassReverse http://xwiki:8080/
+</Location>
 
 
-Listen 443
-<VirtualHost *:443>
-    SSLEngine on
-    SSLCertificateFile "conf/server.crt"
-    SSLCertificateKeyFile "conf/server.key"
-	LogLevel Debug
-</VirtualHost>
+# ProxyPass  /aplicaciones/xwiki/ http://xwiki:8080/
+# ProxyPassReverse /aplicaciones/xwiki/  http://xwiki:8080/
 
-ProxyPreserveHost On
-ProxyPass / http://xwiki:8080/ 
-ProxyPassReverse / http://xwiki:8080/
+# ProxyPass  / http://xwiki:8080/
+# ProxyPassReverse / http://xwiki:8080/
+
+
+
+
+# proxypass "/xwiki" "http://xwiki.mv:8080/"
+# proxypassreverse "/xwiki" "http://xwiki.mv:8080/"

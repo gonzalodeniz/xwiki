@@ -34,9 +34,15 @@ services:
       - "8080:8080"
     extra_hosts:
       - "xwiki.mv: 192.168.56.101"      
+      - "cas: 192.168.56.101"      
     volumes:
       - xwiki_data:/usr/local/xwiki
-      - ./xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg
+      - ./xwiki-config/xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg
+      - ./xwiki-config/xwiki.properties:/usr/local/xwiki/data/xwiki.properties
+      - ./xwiki-config/configuration.properties:/usr/local/xwiki/data/configuration.properties
+      - ./xwiki-config/cacerts:/opt/java/openjdk/lib/security/cacerts
+      
+
     environment:
       DB_USER: xwiki
       DB_PASSWORD: xwiki
@@ -47,7 +53,8 @@ services:
     image: apereo/cas:v5.0.6
     container_name: xwiki-cas
     extra_hosts:
-      - "xwiki.mv: 192.168.56.101"      
+      - "xwiki.mv: 192.168.56.101"
+      - "cas: 192.168.56.101"         
     networks:
       xwiki-network:
         aliases:
@@ -69,6 +76,7 @@ services:
       - 443:443
       - 80:80
     volumes:
+      - ./build-httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf
       - httpd_conf:/usr/local/apache2/conf
       - httpd_log:/usr/local/apache2/logs
     extra_hosts:

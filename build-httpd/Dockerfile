@@ -10,8 +10,8 @@ COPY server.crt conf/
 COPY server.key conf/
 COPY cas.crt /etc/ssl/certs/cas.crt
 
-# ¿Para qué es este enlace?
-RUN ln -s /etc/ssl/certs/cas.crt /etc/ssl/certs/f7349776.0
+# Este enlace debe ser el hash de cas.crt
+RUN ln -s /etc/ssl/certs/cas.crt /etc/ssl/certs/2ac616d2.0
 
 #https
 EXPOSE 443

@@ -550,13 +550,14 @@ xwiki.stats.default=0
 xwiki.authentication.authclass=org.xwiki.contrib.authentication.cas.XWikiCASAuthenticator
 
 # CAS server url (i.e. https://localhost:8443/cas)
-xwiki.authentication.cas.server=http://xwiki.mv:9080/cas
+# xwiki.authentication.cas.server=http://xwiki.mv:9080/cas
+xwiki.authentication.cas.server=https://cas:9443/cas
 
 # possible values are CAS20 or SAML11
 xwiki.authentication.cas.protocol=CAS20
 
 # 0 or 1 if create XWiki user after log in
-xwiki.authentication.cas.create_user=1
+xwiki.authentication.cas.create_user=0
 
 # 0 or 1 if update user attributes after every log in
-xwiki.authentication.cas.update_user=1
+xwiki.authentication.cas.update_user=0
