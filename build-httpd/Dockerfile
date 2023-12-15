@@ -8,10 +8,10 @@ WORKDIR /usr/local/apache2
 COPY httpd.conf conf/
 COPY server.crt conf/
 COPY server.key conf/
-COPY cas.crt /etc/ssl/certs/cas.crt
+# COPY cas.crt /etc/ssl/certs/cas.crt
 
 # Este enlace debe ser el hash de cas.crt
-RUN ln -s /etc/ssl/certs/cas.crt /etc/ssl/certs/2ac616d2.0
+# RUN ln -s /etc/ssl/certs/cas.crt /etc/ssl/certs/2ac616d2.0
 
 #https
 EXPOSE 443
