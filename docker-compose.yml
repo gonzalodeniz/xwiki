@@ -38,8 +38,7 @@ services:
     volumes:
       - xwiki_data:/usr/local/xwiki
       - ./xwiki-config/xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg
-      - ./xwiki-config/xwiki.properties:/usr/local/xwiki/data/xwiki.properties
-      - ./xwiki-config/configuration.properties:/usr/local/xwiki/data/configuration.properties
+      - ./xwiki-config/xwiki.properties:/usr/local/xwiki/data/xwiki.properties      
       - ./xwiki-config/cacerts:/opt/java/openjdk/lib/security/cacerts
       
 
