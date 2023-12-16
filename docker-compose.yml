@@ -1,31 +1,26 @@
 version: '3.8'
 services:
-  xwiki-mysql:
-    image: mysql:5.7
-    container_name: xwiki-mysql
+  xwiki-postgres:
+    image: "postgres:16"
+    container_name: xwiki-postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_ROOT_PASSWORD=xwiki
+      - POSTGRES_PASSWORD=xwiki
+      - POSTGRES_USER=xwiki
+      - POSTGRES_DB=xwiki
+      - POSTGRES_INITDB_ARGS="--encoding=UTF8"
     networks:
       xwiki-network:
         aliases:
-          - mysql  
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./mysql-config:/docker-entrypoint-initdb.d
-    environment:
-      MYSQL_ROOT_PASSWORD: xwiki
-      MYSQL_USER: xwiki
-      MYSQL_PASSWORD: xwiki
-      MYSQL_DATABASE: xwiki
-      character-set-server: utf8
-      collation-server: utf8_bin
-      explicit-defaults-for-timestamp: '1'
+          - postgres
 
   xwiki:
-    image: xwiki:lts-mysql-tomcat
+    image: xwiki:stable-postgres-tomcat
     container_name: xwiki
     depends_on:
-      - xwiki-mysql
+      - xwiki-postgres
     networks:
       xwiki-network:
         aliases:
@@ -38,14 +33,13 @@ services:
     volumes:
       - xwiki_data:/usr/local/xwiki
       - ./xwiki-config/xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg      
-      - ./xwiki-config/cacerts:/opt/java/openjdk/lib/security/cacerts
-      
+      - ./xwiki-config/cacerts:/opt/java/openjdk/lib/security/cacerts   
 
     environment:
       DB_USER: xwiki
       DB_PASSWORD: xwiki
       DB_DATABASE: xwiki
-      DB_HOST: xwiki-mysql
+      DB_HOST: xwiki-postgres
 
   xwiki-cas:    
     image: apereo/cas:v5.0.6
@@ -89,8 +83,9 @@ networks:
     driver: bridge
 
 volumes:
-  mysql_data:
+  xwiki_data:
+  postgres_data:
   httpd_conf:
   httpd_log:
-  xwiki_data:
+  
 
