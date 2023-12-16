@@ -37,8 +37,7 @@ services:
       - "cas: 192.168.56.101"      
     volumes:
       - xwiki_data:/usr/local/xwiki
-      - ./xwiki-config/xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg
-      - ./xwiki-config/xwiki.properties:/usr/local/xwiki/data/xwiki.properties      
+      - ./xwiki-config/xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg      
       - ./xwiki-config/cacerts:/opt/java/openjdk/lib/security/cacerts
       
 
