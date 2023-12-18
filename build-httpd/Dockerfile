@@ -8,10 +8,10 @@ WORKDIR /usr/local/apache2
 COPY httpd.conf conf/
 COPY server.crt conf/
 COPY server.key conf/
-COPY gobcan.mv.crt /etc/ssl/certs/gobcan.mv.crt
+# COPY gobcan.mv.crt /etc/ssl/certs/gobcan.mv.crt
 
 # Este enlace debe ser el hash de gobcan.crt
-RUN ln -s /etc/ssl/certs/gobcan.mv.crt /etc/ssl/certs/9a94bef5.0
+# RUN ln -s /etc/ssl/certs/gobcan.mv.crt /etc/ssl/certs/9a94bef5.0
 
 #https
 EXPOSE 443

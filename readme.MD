@@ -1,38 +1,8 @@
 # XWIKI
 
-## Instalación xwiki
-
-Sitúate en la misma carpeta donde se encuentra el fichero docker-compose.yml y ejecuta el docker-compose:
-
-```
-docker-compose up -d
-```
-
-### Configuración inicial de xwiki
-
-Paso 1: Introduce los datos del usuario admin:
-
-```
-First Name: admin
-Last Name:
-Username: admin
-Password: 1q2w3e4R.
-
-```
-
-Paso 2: Instala XWiki Standard Flavor
-
-
-Comprueba si se ejecuta correctamente (xwiki.mv es un nombre local de dns que apunta a la máquina donde está instalado xwiki)
-
- http://localhost:8080/bin/view/Main
- http://xwiki.mv:8080/bin/view/Main
-
-
-## Referencias
-- https://xwiki.com/en/Blog/HowtoinstallXWikiusingDocker/
-- https://github.com/xwiki-contrib/docker-xwiki/blob/master/README.md
-- https://github.com/xwiki-contrib/authenticator-jasig-cas
+XWiki es una plataforma de software libre y de código abierto para la creación de wikis empresariales y aplicaciones colaborativas. Basado en el lenguaje de programación Java y el framework Apache Velocity para plantillas, XWiki permite a los usuarios crear, editar y organizar contenido en un formato similar a un wiki. 
+Lo que distingue a XWiki de otros sistemas de gestión de contenido wiki es su modelo de datos estructurado, que facilita la creación de aplicaciones personalizadas dentro del wiki, incluyendo gestores de tareas, CRM, intranets, y más. Además, XWiki soporta una amplia gama de funciones de colaboración y de gestión de documentos, como control de versiones, poderosas capacidades de búsqueda, y una arquitectura extensible a través de complementos. 
+Su enfoque modular y flexible lo hace adecuado tanto para pequeñas organizaciones como para grandes empresas que buscan una solución colaborativa integrada.
 
 
 
