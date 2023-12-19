@@ -41,6 +41,7 @@ services:
       DB_PASSWORD: xwiki
       DB_DATABASE: xwiki
       DB_HOST: xwiki-postgres
+      CONTEXT_PATH: aplicaciones#xwiki
 
   xwiki-cas:    
     image: apereo/cas:v5.0.6
