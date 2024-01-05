@@ -27,8 +27,6 @@ services:
           - xwiki      
     ports:
       - "8080:8080"
-    # extra_hosts:   
-    #    - "cas:127.0.0.1"      
     volumes:
       - xwiki_data:/usr/local/xwiki
       - ./xwiki-config/xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg     
@@ -80,9 +78,7 @@ services:
     ports:
       - 10443:10443             
     volumes:
-      - ./build-httpd-gobcan/httpd.conf:/usr/local/apache2/conf/httpd.conf
-    # extra_hosts:       
-    #   - "xwiki.mv:127.0.0.1"   
+      - ./build-httpd-gobcan/httpd.conf:/usr/local/apache2/conf/httpd.conf  
     networks:
       xwiki-network:
         aliases:
