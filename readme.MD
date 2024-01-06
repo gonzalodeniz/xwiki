@@ -66,90 +66,69 @@ Certificado del servidor xwiki
 
     cd build-httpd
 
-    openssl req -x509 -newkey rsa:2048 -keyout server.key -out server.crt -days 365 -nodes -subj "/CN=xwiki.mv" -addext "subjectAltName=DNS:xwiki.mv,DNS:xwiki,DNS:192.168.56.101"
+    openssl req -x509 -newkey rsa:2048 -keyout server.key -out server.crt -days 365 -nodes -subj "/CN=xwiki.mv" -addext "subjectAltName=DNS:xwiki.mv,DNS:xwiki,DNS:192.168.56.101,DNS:localhost"
+
+Para comprobar el fichero crt creado:
+    
+    openssl x509 -in server.crt -text -noout
 
 Sustituye el fichero cas.crt generado por el que se encuentra en la carpeta cas-config.
-Certificado del CAS
+Certificado del CAS. El nombre de xwiki-cas deberá ser sustituido por el nombre del servidor real del CAS. 
+Si se está montando todo en el mismo servidor con contenedores, debe asegurarte que añadir en el fichero /etc/hosts la entrada xwiki-cas con la ip correspondiente.
+
 
     cd cas-config
 
-    openssl req -x509 -newkey rsa:2048 -keyout cas.key -out cas.crt -days 365 -nodes -subj "/CN=cas" -addext "subjectAltName=DNS:cas,DNS:192.168.56.101"
+    openssl req -x509 -newkey rsa:2048 -keyout cas.key -out cas.crt -days 365 -nodes -subj "/CN=xwiki-cas" -addext "subjectAltName=DNS:xwiki-cas,DNS:cas,DNS:192.168.56.101,DNS:localhost"
 
-### Instalación xwiki
+Crea el fichero p12
 
-Se da por hecho que tienes instalado los ficheros de este repositorio en un directorio de tu sistema linux. Modifica los siguientes ficheros si fuera necesario para adaptarlo a tu infraestructura. 
-
-#### Fichero de configuración de apache build-httpd/httpd.conf
-
-Aquí en un principio no hay que modificar nada si las rutas de contexto son **aplicaciones/xwiki**
-
-    vim build-httpd/httpd.conf
+    openssl pkcs12 -export -in cas.crt -inkey cas.key -out cas.p12 -name xwiki-cas
+    Enter Export Password: changeit
+    Verifying - Enter Export Password: changeit
 
 
-    ########################################################
-    # Configuracion HTTP a HTTPS
-    ########################################################
-    <VirtualHost *:80>
-    RewriteEngine On
-    RewriteCond %{HTTPS} off
-    RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
-    </VirtualHost>
+### Parámetros de configuración
 
+Se describe brevemente los parámetros para configuraciones personalizadas menos conocidas
 
-    ########################################################
-    # Configuracion PROXY REVERSE HTTPS
-    ########################################################
-    Listen 443
-    <VirtualHost *:443>
-        LogLevel debug
+#### Docker-compose.yml
 
-        # Certificado
-        SSLEngine on
-        
-        # Desactiva toda verificacion
-        SSLProxyEngine on
+Servicio xwiki:
+- parámetro **CONTEXT_PATH: aplicaciones#xwiki**: Modifica el contexto de la aplicación 
 
-        SSLCertificateFile "conf/server.crt"
-        SSLCertificateKeyFile "conf/server.key"
+#### build-httpd/Dockerfile
 
-        RewriteEngine on
-        # Inserta la barra final si no se pone
-        RewriteRule ^/aplicaciones/xwiki$ /aplicaciones/xwiki/ [R]
-        
-        # Inserta aplicaciones/xwiki donde xwiki no lo hace. 
-        # R=307 para que mantenga los metodos POST
-        RewriteRule ^/bin/(.*)$ /aplicaciones/xwiki/bin/$1 [R=307,L]
-        RewriteRule ^/rest/(.*)$ /aplicaciones/xwiki/rest/$1 [R=307,L]
-        RewriteRule ^/asyncrenderer/(.*)$ /aplicaciones/xwiki/asyncrenderer/$1 [R=307,L]
+Nombre de los certificados
 
-        # Corrige la codificacion de la barra
-        AllowEncodedSlashes NoDecode
-        RewriteRule ^/aplicaciones%2Fxwiki/(.*)$ /aplicaciones/xwiki/$1 [R=301,L,NE]
+#### build-httpd/httpd.conf
 
-            
-        ProxyRequests Off
-        ProxyPreserveHost On
+Aquí se configuran las rutas del contexto y el proxy-reverse para modificar el contexto.
 
-        # Proxy Reverse
-        ProxyPass /aplicaciones/xwiki/ http://xwiki:8080/ 
-        ProxyPassReverse /aplicaciones/xwiki/ http://xwiki:8080/
+#### xwiki-config/xwiki.cfg
 
-    </VirtualHost>
+Si la ruta de acceso es diferente al nombre del servidor, por ejemplo gobcan.mv, hay que descomentar y editar la propiedad xwiki.home con el nombre y puerto de acceso. Si no, se comenta.
+Si el nombre de entrada a la aplicación es directamente el nombre del servidor sería
 
+Sustituye xwiki.mv por el nombre de tu servidor
 
+    xwiki.home=https://xwiki.mv/
 
-#### Fichero configuración xwiki-config/xwiki.cfg
+Busca en el mismo fichero el campo webappath que nos indica el contexto. Debe tener el mismo contexto que en el proxy reverse del fichero de configuración httpd.conf de apache y la variable de entorno ONTEXT_PATH del docker-compose
+
+    xwiki.webapppath=aplicaciones/xwiki/
+
 
 Asegurate que la primera vez que se inicie xwiki los campos de configuración del CAS que se encuentran al final del fichero estén comentado porque si no dará error por no estar instalado aún el plugin del CAS.
 
-    vim xwiki-config/xwiki.cfg
+vim xwiki-config/xwiki.cfg
 
 
     # # CAS authentication
     # xwiki.authentication.authclass=org.xwiki.contrib.authentication.cas.XWikiCASAuthenticator
 
     # # CAS server url (i.e. https://localhost:8443/cas)
-    # xwiki.authentication.cas.server=https://cas:9443/cas
+    # xwiki.authentication.cas.server=https://xwiki-cas:8443/cas
 
 
     # # possible values are CAS20 or SAML11
@@ -161,21 +140,94 @@ Asegurate que la primera vez que se inicie xwiki los campos de configuración de
     # # 0 or 1 if update user attributes after every log in
     # xwiki.authentication.cas.update_user=0
 
-Busca en el mismo fichero el siguiente campo. Debe tener el mismo contexto que en el proxy reverse del fichero de configuración httpd.conf de apache
 
-    xwiki.webapppath=aplicaciones/xwiki/
+#### xwiki-config/xwiki.properties
+Inserta en el siguiente campo el nombre del dominio del CAS para que xwiki no lo bloquee. Puedes añadir más dominio separados por coma.
 
-Si se va a utilizar el xwiki con el nombre del frontal del gobcan, hay que modifcar en este fichero xwiki.cfg la propiedad:
+    url.trustedDomains=xwiki-cas
 
-    xwiki.home=https://gobcan.mv:10443/
 
-#### Fichero de propiedades xwiki-config/xwiki.properties
+### Actualiza el keystore del CAS
+El certificado del CAS se guarda en el fichero cas-config/thekeystore y se instala con la herramienta keytool que debe coincidir con la versión de java del CAS que es 1.8, por lo que lo instalamos dentro del contenedor.
+Arranca únicamente el CAS
 
-Inserta en el siguiente campo el nombre del dominio del CAS para que xwiki no lo bloquee.
+    docker-compose up -d xwiki-cas
 
-    vim xwiki-config/xwiki.properties
+Instala el certificado generado en el thekeystore
 
-    url.trustedDomains=cas
+    cd cas-config/
+
+    # Copia el certificado cas.crt dentro del contenedor
+    docker cp cas.p12 xwiki-cas:/etc/cas/
+
+    # Abre la terminal del contenedor del cas
+    docker exec -it xwiki-cas bash
+
+    # Cambia a la carpeta donde se encuentra el keystore
+    cd /etc/cas/
+
+    # Muestra los certificados almacenados en el keystore
+    keytool -list -keystore thekeystore -storepass changeit
+
+    # Borra los certificados que no son necesarios
+    keytool -delete -alias cas -keystore thekeystore -storepass changeit
+
+    # Guarda el certificado dentro de thekeystore
+    keytool -importkeystore -destkeystore thekeystore -srckeystore cas.p12 -srcstoretype PKCS12 -alias xwiki-cas -storepass changeit    
+
+Comprueba el certificado que se ha instalado
+
+    keytool -list -keystore thekeystore -storepass changeit
+
+    Keystore type: JKS
+    Keystore provider: SUN
+
+    Your keystore contains 1 entry
+
+    xwiki-cas, Jan 6, 2024, PrivateKeyEntry, 
+    Certificate fingerprint (SHA1): 6D:36:DC:0E:D0:5A:91:19:67:22:A7:9F:8E:DF:6C:2D:DA:96:4B:6C
+
+Una vez actualizado paramos el contenedor
+
+    exit
+    docker-compose down
+    cd ..
+
+
+### Actualiza el keystore del XWIKI
+Arranca únicamente el CAS
+
+    docker-compose up -d xwiki
+
+Instala el certificado generado en el cacerts
+
+    # Copia el certificado cas.p12 a xwiki
+    docker cp cas.p12 xwiki:/opt/java/openjdk/lib/security/
+
+    # Abre el terminal del contenedor
+    docker exec -it xwiki bash
+
+    # Mueve a la carpeta donde está el cacert
+    cd /opt/java/openjdk/lib/security/
+
+    # Muestra los certificados almacenados en el keystore
+    keytool -list -cacerts -storepass changeit
+
+    # Borra los certificados que no son necesarios
+    keytool -delete -alias xwiki-cas -cacerts -storepass changeit
+
+    # Guarda el certificado dentro de thekeystore
+    keytool -importkeystore -destkeystore cacerts -srckeystore cas.p12 -srcstoretype PKCS12 -alias xwiki-cas -deststorepass changeit -srcstorepass changeit
+
+    # Comprueba el certificado almacenados en el keystore
+    keytool -list -cacerts -storepass changeit
+    exit
+
+Una vez actualizado paramos el contenedor
+
+    exit
+    docker-compose down
+    cd ..
 
 
 ### Docker-compose UP
@@ -197,51 +249,10 @@ https://xwiki.mv/aplicaciones/xwiki/
 La primera vez que entras en xwiki se mostrará el wizard de configuración inicial. Instala la extensión **XWiki Standard Flavor**
 
 
-## Configuracion certificado en el CAS
 
-Abre el cas en el navegador y comprueba que el certificado del CAS instalado coincide con la URL
+## Configuración CAS en Xwiki
 
-https://cas:9443/cas/login
-
-El certificado del CAS se guarda en el fichero **cas-config/thekeystore** y se instala con la herramienta keytool que debe coincidir con la versión de java del CAS que es 1.8, por lo que lo mejor es instalarlo dentro del contenedor.
-
-Crea un fichero p12 con la clave pública y privada del cas
-
-    openssl pkcs12 -export -in cas.crt -inkey cas.key -out cas.p12 -name cas
-
-    Enter Export Password: changeit
-    Verifying - Enter Export Password: changeit
-    
-Instalamos el certificado generado en el thekeystore
-
-    # Copia el certificado cas.crt dentro del contenedor
-    docker cp cas.p12 xwiki-cas:/etc/cas/
-
-    # Abre la terminal del contenedor del cas
-    docker exec -it xwiki-cas bash
-
-    # Guarda el certificado dentro de thekeystore
-    cd /etc/cas/
-    keytool -importkeystore -destkeystore thekeystore -srckeystore cas.p12 -srcsto
-    retype PKCS12 -alias cas -storepass changeit
-
-    # Muestra los certificados instalados
-    keytool -list -keystore thekeystore -storepass changeit
-
-    # Borra los certificados que no son necesario
-    keytool -delete -alias xwiki.mv -keystore thekeystore -storepass changeit
-
-    exit
-
-Reinicia el contenedor cas
-
-    docker restart xwiki-cas
-
-
-### Configuración CAS en Xwiki
-
-Autentificate en xwiki con el usuario admin y abre el panel de administración, pulsando en el botón Drawer > Administer Wiki arriba a la derecha
-Instala la extensión **Authenticator Jasig CAS**
+Autentificate en xwiki con el usuario admin y abre el panel de administración, pulsando en el botón Drawer > Administer Wiki arriba a la derecha. Busca la extensión Authenticator Jasig CAS y pulsa el botón de instalar 
 
 Una vez instalado detiene xwiki
 
@@ -253,7 +264,7 @@ Modifica la parte final del fichero xwiki.cfg, descomentando las siguientes inst
     xwiki.authentication.authclass=org.xwiki.contrib.authentication.cas.XWikiCASAuthenticator
 
     # CAS server url (i.e. https://localhost:8443/cas)
-    xwiki.authentication.cas.server=http://cas:9443/cas
+    xwiki.authentication.cas.server=http://xwiki-cas:8443/cas
 
     # possible values are CAS20 or SAML11
     xwiki.authentication.cas.protocol=CAS20
@@ -264,34 +275,10 @@ Modifica la parte final del fichero xwiki.cfg, descomentando las siguientes inst
     # 0 or 1 if update user attributes after every log in
     xwiki.authentication.cas.update_user=0
 
+
 Una vez modificado el fichero arranca xwiki
 
     docker start xwiki
 
 Abre en el navegador la xwiki
 https://xwiki.mv/aplicaciones/xwiki/
-
-Al realizar login debe mostrar la ventana del CAS
-
-Si después de autenticarse en el CAS se recibe la siguiente execpción:
-
-    javax.net.ssl.SSLHandshakeException: PKIX path building failed
-
-Es necesario añadir el certificado del CAS en el cacerts de xwiki.
-
-    # Copia el certificado cas.p12 a xwiki
-    docker cp cas.p12 xwiki:/opt/java/openjdk/lib/security/
-
-    # Abre el terminal del contenedor
-    docker exec -it xwiki bash
-
-    # Copia el certificado
-    cd /opt/java/openjdk/lib/security/
-    keytool -importkeystore -destkeystore cacerts -srckeystore cas.p12 -srcstoretype PKCS12 -alias cas -deststorepass changeit -srcstorepass changeit
-
-    exit
-
-Reinicia el contenedor
-
-    docker restart xwiki
-
