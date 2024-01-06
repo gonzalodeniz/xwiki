@@ -27,15 +27,13 @@ services:
           - xwiki      
     ports:
       - "8080:8080"
-    extra_hosts:   
-      - "cas:192.168.56.101"      
-    
+    # extra_hosts:   
+    #    - "cas:127.0.0.1"      
     volumes:
       - xwiki_data:/usr/local/xwiki
       - ./xwiki-config/xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg     
       - ./xwiki-config/xwiki.properties:/usr/local/xwiki/data/xwiki.properties       
       - ./xwiki-config/cacerts:/opt/java/openjdk/lib/security/cacerts   
- 
     environment:
       DB_USER: xwiki
       DB_PASSWORD: xwiki
@@ -46,18 +44,18 @@ services:
   xwiki-cas:    
     image: apereo/cas:v5.0.6
     container_name: xwiki-cas         
-    networks:
-      xwiki-network:
-        aliases:
-          - cas
     ports:
       - ${CAS_HTTP_PORT:-9080}:8080
-      - ${CAS_HTTPS_PORT:-9443}:8443
+      - ${CAS_HTTPS_PORT:-8443}:8443
     volumes:
     - ./cas-config/config:/cas-overlay/etc/cas/config
     - ./cas-config/application.properties:/cas-overlay/src/main/resources/application.properties
     - ./cas-config/thekeystore:/etc/cas/thekeystore
     - ./cas-config/xwiki-10001000.json:/cas-overlay/src/main/resources/services/xwiki-10001000.json
+    networks:
+      xwiki-network:
+        aliases:
+          - cas
 
   xwiki-httpd:
     build:
@@ -65,7 +63,7 @@ services:
     container_name: xwiki-httpd
     ports:
       - 443:443
-      - 80:80
+      - 80:80    
     volumes:
       - ./build-httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf
       - httpd_conf:/usr/local/apache2/conf
@@ -80,11 +78,11 @@ services:
       context: ./build-httpd-gobcan
     container_name: xwiki-httpd-gobcan
     ports:
-      - 10443:10443      
-    extra_hosts:   
-      - "xwiki.mv:192.168.56.101"          
+      - 10443:10443             
     volumes:
       - ./build-httpd-gobcan/httpd.conf:/usr/local/apache2/conf/httpd.conf
+    # extra_hosts:       
+    #   - "xwiki.mv:127.0.0.1"   
     networks:
       xwiki-network:
         aliases:
