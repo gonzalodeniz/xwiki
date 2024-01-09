@@ -83,7 +83,7 @@ Si se está montando todo en el mismo servidor con contenedores, debe asegurarte
 
 Crea el fichero p12
 
-    openssl pkcs12 -export -in cas.crt -inkey cas.key -out cas.p12 -name xwiki-cas
+    openssl pkcs12 -export -in cas.crt -inkey cas.key -out cas.p12 -name xwiki-cas -legacy
     Enter Export Password: changeit
     Verifying - Enter Export Password: changeit
 

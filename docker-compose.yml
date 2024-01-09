@@ -78,7 +78,7 @@ services:
     ports:
       - 10443:10443             
     volumes:
-      - ./build-httpd-gobcan/httpd.conf:/usr/local/apache2/conf/httpd.conf  
+      - ./build-httpd-gobcan/httpd.conf:/usr/local/apache2/conf/httpd.conf         
     networks:
       xwiki-network:
         aliases:
