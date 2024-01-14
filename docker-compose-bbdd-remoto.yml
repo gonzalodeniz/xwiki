@@ -1,0 +1,97 @@
+version: '3.8'
+services:
+  # SIMULA UNA BBDD REMOTA.
+  # Hay que crear previamente la BBDD, usuarios y permisos
+  xwiki-postgres:
+    image: "postgres:16"
+    container_name: xwiki-postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data    
+    environment:
+      - POSTGRES_PASSWORD=xwiki
+    ports:
+      - "5432:5432"
+    networks:
+      xwiki-network:
+        aliases:
+          - postgres
+
+  xwiki:
+    image: xwiki:stable-postgres-tomcat
+    container_name: xwiki
+    depends_on:
+      - xwiki-postgres
+    networks:
+      xwiki-network:
+        aliases:
+          - xwiki      
+    ports:
+      - "8080:8080"
+    volumes:
+      - xwiki_data:/usr/local/xwiki
+      - ./xwiki-config/xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg     
+      - ./xwiki-config/xwiki.properties:/usr/local/xwiki/data/xwiki.properties       
+      - ./xwiki-config/cacerts:/opt/java/openjdk/lib/security/cacerts   
+    environment:
+      DB_USER: "xwiki-user"
+      DB_PASSWORD: xwiki
+      DB_DATABASE: xwiki
+      DB_HOST: xwiki-postgres
+      CONTEXT_PATH: aplicaciones#ciberwiki
+
+  xwiki-cas:    
+    image: apereo/cas:v5.0.6
+    container_name: xwiki-cas         
+    ports:
+      - ${CAS_HTTP_PORT:-9080}:8080
+      - ${CAS_HTTPS_PORT:-8443}:8443
+    volumes:
+    - ./cas-config/config:/cas-overlay/etc/cas/config
+    - ./cas-config/application.properties:/cas-overlay/src/main/resources/application.properties
+    - ./cas-config/thekeystore:/etc/cas/thekeystore
+    - ./cas-config/xwiki-10001000.json:/cas-overlay/src/main/resources/services/xwiki-10001000.json
+    networks:
+      xwiki-network:
+        aliases:
+          - cas
+
+  xwiki-httpd:
+    build:
+      context: ./build-httpd
+    container_name: xwiki-httpd
+    ports:
+      - 443:443
+      - 80:80    
+    volumes:
+      - ./build-httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf
+      - httpd_conf:/usr/local/apache2/conf
+      - httpd_log:/usr/local/apache2/logs
+    networks:
+      xwiki-network:
+        aliases:
+          - httpd
+
+  xwiki-httpd-gobcan:
+    build:
+      context: ./build-httpd-gobcan
+    container_name: xwiki-httpd-gobcan
+    ports:
+      - 10443:10443             
+    volumes:
+      - ./build-httpd-gobcan/httpd.conf:/usr/local/apache2/conf/httpd.conf         
+    networks:
+      xwiki-network:
+        aliases:
+          - httpd-gobcan
+
+networks:
+  xwiki-network:
+    driver: bridge
+
+volumes:
+  xwiki_data:
+  postgres_data:
+  httpd_conf:
+  httpd_log:
+  
+

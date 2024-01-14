@@ -1,3 +1,6 @@
 borrame/
 _data
 *.original
+venv/
+*.pyc
+api-rest/
