@@ -5,8 +5,7 @@ services:
     container_name: xwiki-postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_ROOT_PASSWORD=xwiki
+    environment:      
       - POSTGRES_PASSWORD=xwiki
       - POSTGRES_USER=xwiki
       - POSTGRES_DB=xwiki
