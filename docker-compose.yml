@@ -14,6 +14,8 @@ services:
       xwiki-network:
         aliases:
           - postgres
+    ports:
+      - "5432:5432"
 
   xwiki:
     image: xwiki:stable-postgres-tomcat
