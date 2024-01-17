@@ -3,4 +3,3 @@ _data
 *.original
 venv/
 *.pyc
-api-rest/

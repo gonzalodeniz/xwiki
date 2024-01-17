@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# Definir la URL del servidor CAS y las credenciales
+CAS_HOSTNAME="xwiki-cas:8443"
+CAS_FULL_URL="https://xwiki-cas:8443/cas/login?service=https%3A%2F%2Fxwiki.mv%2Faplicaciones%2Fciberwiki%2Fbin%2Flogin%2FXWiki%2FXWikiLogin%3Fxredirect%3D%252Faplicaciones%252Fciberwiki%252Fbin%252Fview%252FMain%252F%26loginLink%3D1"
+USERNAME="admin"
+PASSWORD="admin"
+SITE="https://xwiki.mv/aplicaciones/ciberwiki"
+DEST=$SITE"/rest/wikis/xwiki/spaces/privado/pages/WebHome"
+
+
+# Encode the destination URL using curl
+ENCODED_DEST=$(curl -Gso /dev/null -w %{url_effective} --data-urlencode "" "${CAS_FULL_URL}" | cut -d'?' -f2)
+
+# Ficheros temporales para cookies y headers
+COOKIE_XWIKI=$(mktemp)
+COOKIE_CAS=$(mktemp)
+HEADER_DUMP_DEST=$(mktemp)
+# echo -e "COOKIE_XWIKI="$COOKIE_XWIKI
+# echo -e "HEADER_DUMP_DEST="$HEADER_DUMP_DEST
+
+# Borra los ficheros temporales
+cleanup() {
+    rm -f "${COOKIE_XWIKI}" "${HEADER_DUMP_DEST}" "${COOKIE_CAS}"
+}
+
+muestra_jsession(){
+    echo -e "\nCOOKIE_XWIKI=\n"$(cat "${COOKIE_XWIKI}") 
+}
+muestra_cookie_cas(){
+    echo -e "\nCOOKIE_CAS=\n"$(cat "${COOKIE_CAS}") 
+}
+muestra_header(){
+    echo -e "\nHEADER_DUMP_DEST=\n"$(cat "${HEADER_DUMP_DEST}")
+}
+
+
+# Register the cleanup function to be called on the EXIT signal
+# Descomenta la siguiente línea para borrar las cookies
+# trap cleanup EXIT
+
+echo -e "\n## Obtiene la cookie de sesion de xwiki ##"
+echo -e "\ncurl -k --silent --location --fail --cookie-jar ${COOKIE_XWIKI} ${SITE}"
+curl -k --location --fail --head --cookie-jar ${COOKIE_XWIKI} ${SITE}
+
+# Fetch the CAS login form and extract the CAS_ID
+echo -e "\n## Obtiene el CAS_ID ##"
+#echo -e "\nURL=https://${CAS_HOSTNAME}/cas/login?service=${ENCODED_DEST}"
+# CAS_ID=$(curl -k --silent --location --cookie-jar "${COOKIE_XWIKI}" --url "https://${CAS_HOSTNAME}/cas/login?service=${ENCODED_DEST}" | sed -n 's/.*name="execution" value="\([^"]*\)".*/\1/p')
+echo -e "\ncurl -k --silent --location --cookie-jar ${COOKIE_CAS} --url ${CAS_FULL_URL}"
+CAS_ID=$(curl -k --silent --location --cookie-jar ${COOKIE_CAS} --url ${CAS_FULL_URL} | sed -n 's/.*name="execution" value="\([^"]*\)".*/\1/p')
+
+if [[ -z "${CAS_ID}" ]]; then
+   echo "Login ticket is empty."
+   exit 1
+fi
+
+# echo -e "\nCAS_ID="$CAS_ID
+# muestra_jsession
+# muestra_cookie_cas
+# exit
+
+
+# Submit the CAS login form
+# ORIGINAL: curl -k --silent --location --fail --data "username=${USERNAME}&password=${PASSWORD}&execution=${CAS_ID}&_eventId=submit" --cookie "${COOKIE_XWIKI}" --cookie-jar "${COOKIE_XWIKI}" --url "https://${CAS_HOSTNAME}/cas/login?service=${ENCODED_DEST}" --dump-header "${HEADER_DUMP_DEST}"
+echo -e "\n## Envia formulario login ##"
+echo -e "\ncurl -k  --fail --data \"username=${USERNAME}&password=${PASSWORD}&execution=${CAS_ID}&_eventId=submit\" --cookie ${COOKIE_XWIKI} --cookie-jar ${COOKIE_CAS} --url ${CAS_FULL_URL} --dump-header ${HEADER_DUMP_DEST}"
+curl -k --silent --fail --data "username=${USERNAME}&password=${PASSWORD}&execution=${CAS_ID}&_eventId=submit" --cookie "${COOKIE_XWIKI}" --cookie-jar "${COOKIE_CAS}" --url "${CAS_FULL_URL}" --dump-header "${HEADER_DUMP_DEST}"
+muestra_jsession
+muestra_cookie_cas
+muestra_header
+
+
+# Extract the redirection URL from the headers
+DEST_TICKET=$(grep Location "${HEADER_DUMP_DEST}" |head -1| sed 's/Location: //')
+
+if [[ -z "${DEST_TICKET}" ]]; then
+    echo "Cannot login. Check if you can login in a browser using user/pass = ${USERNAME}/${PASSWORD} and the following url: https://${CAS_HOSTNAME}/cas/login?service=${ENCODED_DEST}"
+    exit 1
+fi
+
+# Follow the redirection URL to get authenticated
+# ORIGINAL: curl -k --silent --location --fail --cookie "${COOKIE_XWIKI}" "${DEST_TICKET}"
+# echo -e "\nSITE=" ${SITE}
+# echo -e "\nDEST=" ${DEST}
+# echo -e "\nDEST_TICKET="${DEST_TICKET}
+
+URL1="https://xwiki.mv/aplicaciones/ciberwiki/bin/login/XWiki/XWikiLogin?xredirect=%2Faplicaciones%2Fciberwiki%2Fbin%2Fview%2FMain%2F&loginLink=1"
+echo -e "\ncurl -k -i --cookie "${COOKIE_XWIKI}" --url "${DEST_TICKET}"\n\n"
+curl -k -i --cookie "${COOKIE_XWIKI}" --url "${DEST_TICKET}"
+# https://xwiki.mv/aplicaciones/ciberwiki/bin/login/XWiki/XWikiLogin?xredirect=%2Faplicaciones%2Fciberwiki%2Fbin%2Fview%2FMain%2F&loginLink=1&ticket=ST-18-ojRvkO52YMTxduwULTvd-fc457f8d43a5
+# https://xwiki.mv/aplicaciones/ciberwiki/bin/login/XWiki/XWikiLogin?xredirect=%2Faplicaciones%2Fciberwiki%2Fbin%2Fview%2FMain%2F&loginLink=1&ticket=ST-30-uTWDx7AG9WhPgW6iXImH-fc457f8d43a5
+
+# echo -e "\nhttps://xwiki.mv/aplicaciones/ciberwiki/bin/login/XWiki/XWikiLogin?xredirect=%2Faplicaciones%2Fciberwiki%2Fbin%2Fview%2FMain%2F&loginLink=1&ticket=ST-49-Ldd9DXeyHSmpyQdWR3Vy-fc457f8d43a5xxxxxx"
+
+
+# Access the desired destination
+# ORIGINAL: curl -k --silent --location --fail --cookie "${COOKIE_XWIKI}" "${DEST}"
+echo -e "\ncurl -k --location --cookie" "${COOKIE_XWIKI}" "${DEST}"
+curl -k --location --cookie "${COOKIE_XWIKI}" "${DEST}"
+
