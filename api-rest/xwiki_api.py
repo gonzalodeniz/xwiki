@@ -87,8 +87,8 @@ def crea_usuario(session:requests.session, xwiki_form_token:str, datos_usuario, 
     return response
 
 # Crear una página
-def crea_pagina(session:requests.session, xwiki_form_token:str, nombre_pagina:str, contenido:str) -> requests.Response:
-    base_url = API_BASE +'/wikis/xwiki/spaces/Main/pages/{nombre_pagina}'
+def crea_pagina(session:requests.session, xwiki_form_token:str, nombre_pagina:str, contenido:str) -> requests.Response:    
+    base_url = API_BASE + f'/wikis/xwiki/spaces/Main/pages/{nombre_pagina}'
     headers = {'Content-Type': 'application/xml', 
                'XWiki-Form-Token':xwiki_form_token}
     
@@ -97,6 +97,7 @@ def crea_pagina(session:requests.session, xwiki_form_token:str, nombre_pagina:st
     <syntax>xwiki/2.0</syntax>
     <content>{contenido}</content>
 </page>'''
+    print(base_url)    
     respuesta = session.put(base_url, data=data, headers=headers, verify=False)
     return respuesta
 
@@ -123,11 +124,11 @@ def main() -> None:
     # response = crea_usuario(session, xwiki_form_token, datos_usuario, username)
   
     # Ejemplo de uso
-    nombre_pagina = "Pagina 2"
+    nombre_pagina = "Pagina 3"
     contenido = "Este es el contenido de mi nueva página en XWiki."
 
     # Crear una nueva página
     response = crea_pagina(session, xwiki_form_token, nombre_pagina, contenido)
-    # print(response.text)
+    print(response.text)
 
 main()
