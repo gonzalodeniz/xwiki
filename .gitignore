@@ -3,3 +3,5 @@ _data
 *.original
 venv/
 *.pyc
+.mypy_cache/
+__pycache__/
