@@ -56,29 +56,56 @@ class XWikiAPI:
         response = self.session.get(page_url, verify=False)
         return response.text
     
-    def create_page(self, page_name:str, content:str) -> requests.Response:
-        ''' Crea una página
+    def create_page(self, page_name:str, content:str='', data:str=None) -> requests.Response:        
+        ''' Crea una página.
+                page_name - Nombre de la pagina
+                content   - Contenido de la pagina
+                data      - Estructura xml del contenido de una pagina. 
+                            Si no se especifica se utiliza unos datos básicos por defecto
+
             Informacion sobre la estructura de la pagina xml:
                 https://xwiki.mv/aplicaciones/ciberwiki/rest/wikis/xwiki/spaces/Main/pages/<nombre_pagina>        
         '''
-        url = f"{self.api_base}/wikis/xwiki/spaces/Main/pages/{page_name}"
-        print(url)
+        url = f"{self.api_base}/wikis/xwiki/spaces/Main/pages/{page_name}" 
+
         headers = {'Content-Type': 'application/xml; charset=utf-8', 
                    'XWiki-Form-Token': self.xwiki_form_token}
-        data = f'''<page xmlns="http://www.xwiki.org">     
+        
+        # Datos por defecto de una pagina
+        data_default = f'''<page xmlns="http://www.xwiki.org">     
         <id>{page_name}</id>
         <title>{page_name}</title>
         <syntax>xwiki/2.0</syntax>
         <content>{content}</content>
     </page>'''
+        if data is None:
+            data = data_default
+
         data_encoded = data.encode('utf-8')         
         response = self.session.put(url, data=data_encoded, headers=headers, verify=False)
         return response
 
-    def create_user(self, username:str, user_data:dict) -> requests.Response:
-        url = f"{self.api_base}/wikis/xwiki/spaces/XWiki/pages/{username}/objects"
-        headers = {'XWiki-Form-Token': self.__get_xwiki_form_token()}
-        response = self.session.post(url, data=user_data, headers=headers, verify=False)
+
+
+    def create_user(self, username:str, data:dict=None) -> requests.Response:    
+        ''' Crea una usuario.
+                username - Nombre del usuario
+
+            Informacion sobre la estructura del objeto usuario en xml:
+                https://xwiki.mv/aplicaciones/ciberwiki/rest/wikis/xwiki/spaces/Main/pages/admin/objects 
+        '''
+        
+        # Crea una pagina con el nombre del usuario.
+        self.create_page(username)
+
+        # Crea el objeto usuario        
+        url = f"{self.api_base}/wikis/xwiki/spaces/Main/pages/{username}/objects"
+        headers = {"Content-Type": "application/x-www-form-urlencoded", 'XWiki-Form-Token': self.__get_xwiki_form_token()}        
+     
+
+     
+        data = {'className': 'XWikiUsers'}
+        response = self.session.post(url, data=data, headers=headers, verify=False)
         return response
 
 
@@ -91,17 +118,8 @@ def main():
 
     xwiki_api = XWikiAPI(cas_site, xwiki_site, username, password)
     
-    # Muestra una página privada
-    # page_content = xwiki_api.get_page(xwiki_api.api_base + "/wikis/xwiki/spaces/privado/pages/WebHome")
-    # print(page_content)
-
     # Crea usuario
-    # user_data = {'className': 'XWiki.XWikiUsers', ...}
-    # response = xwiki_api.create_user("newuser", user_data)
-    
-    # Crear una nueva página
-    response = xwiki_api.create_page("pagina1", "Contenido de la página")
-    # print(response.text)
+    response = xwiki_api.create_user("user003")
     print(response.status_code)
 
 
