@@ -1,6 +1,7 @@
 import requests
 from urllib.parse import urlencode, quote
 import json
+import csv
 import re
 
 # Suprime las advertencias de certificados SSL no verificados
@@ -67,7 +68,6 @@ class XWikiAPI:
         else:
             raise ValueError(f"Error: \n{response.text}\nCodigo: {response.status_code}" )
 
-
     def _handle_object_response(self, response:requests.Response) -> None:
         ''' Gestiona los códigos de respuesta de un objecto'''
         if response.status_code == 200:
@@ -81,7 +81,6 @@ class XWikiAPI:
         else:
             raise ValueError(f"Error: \n{response.text}\nCodigo: {response.status_code}" )
           
-
     def get_page(self, page:str, wiki:str='xwiki', space:str='Main') -> requests.Response:
         ''' Obtiene un request.Rsponse de una pagina
                 page - Id de la pagina
@@ -95,7 +94,6 @@ class XWikiAPI:
         self._handle_page_response(response)        
         return response
     
-
     def get_objects(self, page:str, class_name:str='', wiki:str='xwiki', space:str='Main') -> str:
         ''' Obtiene una lista de objetos de una pagina
                 page - Id de la pagina
@@ -140,7 +138,6 @@ class XWikiAPI:
 
         return response
 
-
     def create_object(self, page:str, data:dict, wiki:str='xwiki', space:str='XWiki') -> requests.Response:        
         ''' Crea una página.
                 pages    - Nombre de la pagina
@@ -159,7 +156,6 @@ class XWikiAPI:
         response = self.session.post(url, data=data, headers=headers, verify=False)
         self._handle_page_response(response)
         return response
-
 
     def create_user(self, username:str, group:str='XWikiAllGroup', data_user:dict={}, data_rights:dict={}, wiki:str='xwiki', space:str='XWiki') -> requests.Response:    
         ''' Crea un usuario.
@@ -210,8 +206,30 @@ class XWikiAPI:
         response = self.create_object(username, data=data_rights)
 
         # Asigna el grupo
-        response = self.create_object(page='XWikiAllGroup', data=data_group)
+        response = self.create_object(page=group, data=data_group)
         
         return response
    
-    
+    def create_user_csv(self,file_csv) -> None:
+        ''' Crea los usuario a partir de un fichero csv'''
+        try:
+            lista_usuarios = []
+
+            # Abre y lee el archivo CSV
+            with open(file_csv, mode='r', encoding='utf-8') as csvfile:
+                csv_reader = csv.DictReader(csvfile, delimiter=';')
+
+                # Para cada fila en el CSV, añade un diccionario a la lista 'data'
+                for row in csv_reader:
+                    lista_usuarios.append(row)
+
+            for usuario in lista_usuarios:
+                data_user = {
+                'property#first_name': usuario['first_name'],
+                'property#last_name': usuario['last_name'],
+                'property#email': usuario['email']        
+                } 
+                response = self.create_user(usuario['username'], usuario['group'], data_user)
+                print(f"{usuario['username']} creado")
+        except FileNotFoundError as e:
+            print(e)
