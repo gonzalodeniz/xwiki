@@ -1,14 +1,18 @@
 import requests
 from urllib.parse import urlencode, quote
-import json
 import csv
 import re
+import logging
+
+# Configuración básica del logging
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 # Suprime las advertencias de certificados SSL no verificados
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)  # type: ignore
 
 class XWikiAPI:
     def __init__(self, cas_site:str, xwiki_site:str, username:str, password:str) -> None:
+        logging.debug('Inicializando XWikiAPI')
         self.cas_site = cas_site
         self.xwiki_site = xwiki_site
         self.api_base = xwiki_site + '/rest'
@@ -17,6 +21,7 @@ class XWikiAPI:
 
     def __auth_cas(self, username:str, password:str) -> requests.Session:
         ''' Autentifica contra el cas obteniendo un objeto de sesion'''
+        logging.debug('Autenticando con el CAS')
         # Codifica la URL
         xwiki_site_code = quote(self.xwiki_site)
         xwiki_site_code2 = quote(xwiki_site_code)
@@ -47,37 +52,39 @@ class XWikiAPI:
         session.get(dest_ticket, verify=False)
         return session
 
-    def __get_xwiki_form_token(self) -> str:
+    def __get_xwiki_form_token(self) -> str|None:
         ''' Obtiene el xwiki_form_token necesario para trabajar con las api de xwiki'''
+        logging.debug('Obteniendo el xwiki_form_token')
         response = self.session.get(self.api_base, verify=False)
         return response.headers.get('XWiki-Form-Token')
         
     def _handle_page_response(self, response:requests.Response) -> None:
         ''' Gestiona los códigos de respuesta de una página'''
-        print(f"STATUS CODE = {response.status_code}")
+        logging.debug(f"Status code = {response.status_code}")
         if response.status_code == 200:
-            print('The request was successful.')
+            logging.debug('The request was successful.')
         elif response.status_code == 201:
-            print('The page was created.')
+            logging.debug('The page was created.')
         elif response.status_code == 202:
-            print('The page was update.')            
+            logging.debug('The page was update.')            
         elif response.status_code == 204:
-            print('The page was delete.')               
+            logging.debug('The page was delete.')               
         elif response.status_code == 304:
-            print('The page was not modified.')        
+            logging.debug('The page was not modified.')        
         else:
             raise ValueError(f"Error: \n{response.text}\nCodigo: {response.status_code}" )
 
     def _handle_object_response(self, response:requests.Response) -> None:
         ''' Gestiona los códigos de respuesta de un objecto'''
+        logging.debug(f"Status code = {response.status_code}")
         if response.status_code == 200:
-            print('The request was successful.')
+            logging.debug('The request was successful.')
         elif response.status_code == 201:
-            print('The object was created.')
+            logging.debug('The object was created.')
         elif response.status_code == 202:
-            print('The object was update.')            
+            logging.debug('The object was update.')            
         elif response.status_code == 204:
-            print('The object was delete.')                     
+            logging.debug('The object was delete.')                     
         else:
             raise ValueError(f"Error: \n{response.text}\nCodigo: {response.status_code}" )
           
@@ -88,13 +95,13 @@ class XWikiAPI:
                 space - Nombre del espacio donde se encuentra la pagina                
             API que utiliza https://xwiki.mv/aplicaciones/ciberwiki/rest/wikis/xwiki/spaces/Main/pages/pagina1
         '''        
+        logging.debug(f'Leyendo página: {page}')
         url = f"{self.api_base}/wikis/{wiki}/spaces/{space}/pages/{page}?media=json"                         
-        response = self.session.get(url, verify=False)  
-        print(f"\nGET = {url}")      
+        response = self.session.get(url, verify=False)      
         self._handle_page_response(response)        
         return response
     
-    def get_objects(self, page:str, class_name:str='', wiki:str='xwiki', space:str='Main') -> str:
+    def get_objects(self, page:str, class_name:str='', wiki:str='xwiki', space:str='Main') -> requests.Response:
         ''' Obtiene una lista de objetos de una pagina
                 page - Id de la pagina
                 class_name - Muestra los objetos de una clase
@@ -102,13 +109,13 @@ class XWikiAPI:
                 space - Nombre del espacio donde se encuentra la pagina                
             API que utiliza https://xwiki.mv/aplicaciones/ciberwiki/rest/wikis/xwiki/spaces/Main/pages/pagina1
         '''         
+        logging.debug(f'Leyendo objeto: {page} - {class_name}')
         url = f"{self.api_base}/wikis/{wiki}/spaces/{space}/pages/{page}/objects{class_name}?media=json"                 
         response = self.session.get(url, verify=False)
-        print(f"\nGET = {url}")
         self._handle_page_response(response)
         return response      
     
-    def create_page(self, page:str, content:str='', data:str=None, wiki:str='xwiki', space:str='Main') -> requests.Response:        
+    def create_page(self, page:str, content:str='', data:dict={}, wiki:str='xwiki', space:str='Main') -> requests.Response:        
         ''' Crea una página.
                 page_name - Nombre de la pagina
                 content   - Contenido de la pagina
@@ -120,6 +127,7 @@ class XWikiAPI:
             Informacion sobre la estructura de la pagina xml:
                 https://xwiki.mv/aplicaciones/ciberwiki/rest/wikis/xwiki/spaces/Main/pages/<nombre_pagina>        
         '''        
+        logging.debug(f'Creando página: {page}')
         url = f"{self.api_base}/wikis/{wiki}/spaces/{space}/pages/{page}" 
         headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8', 
                    'XWiki-Form-Token': self.xwiki_form_token}
@@ -129,11 +137,8 @@ class XWikiAPI:
                         'title': {page},
                         'syntax': 'xwiki/2.0',
                         'content': {content}}
-        if data is None:
-            data = data_default
-        
-        response = self.session.put(url, data=data, headers=headers, verify=False)
-        print(f"\nPUT = {url}")        
+        data = data_default|data
+        response = self.session.put(url, data=data, headers=headers, verify=False)     
         self._handle_page_response(response)
 
         return response
@@ -147,10 +152,9 @@ class XWikiAPI:
                             
             Informacion sobre la estructura de la pagina xml:
                 https://xwiki.mv/aplicaciones/ciberwiki/rest/wikis/xwiki/spaces/XWiki/pages/<nombre_pagina>/objects        
-        '''        
+        '''  
+        logging.debug(f"Creando objeto: {page} - {data}")      
         url = f"{self.api_base}/wikis/{wiki}/spaces/{space}/pages/{page}/objects" 
-        print(f"\nPOST = {url}")
-
         headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8', 
                    'XWiki-Form-Token': self.xwiki_form_token}        
         response = self.session.post(url, data=data, headers=headers, verify=False)
@@ -180,7 +184,7 @@ class XWikiAPI:
                     'property#groups': 'XWiki.XWikiAllGroup'         
                     }  
         '''
-
+        logging.debug(f'Creando usuario: {username}')
         data_user_default = {'className': 'XWikiUsers',
                              'property#active': '1'         
         }
@@ -212,6 +216,7 @@ class XWikiAPI:
    
     def create_user_csv(self,file_csv) -> None:
         ''' Crea los usuario a partir de un fichero csv'''
+        logging.debug('Creando usuarios desde fichero CSV')
         try:
             lista_usuarios = []
 
@@ -230,6 +235,9 @@ class XWikiAPI:
                 'property#email': usuario['email']        
                 } 
                 response = self.create_user(usuario['username'], usuario['group'], data_user)
-                print(f"{usuario['username']} creado")
+                if response.status_code == 201:
+                    logging.info(f'Usuario creado: {usuario}')
         except FileNotFoundError as e:
             print(e)
+    
+ 

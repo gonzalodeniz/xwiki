@@ -1,5 +1,2 @@
 username;first_name;last_name;email;group
 ext-user001;Bob;Smith;user001@mail.com;XWikiAdminGroup
-ext-user002;John;Smith;user002@mail.com;XWikiAdminGroup
-ext-user003;Ana;Smith;user003@mail.com;XWikiAllGroup
-ext-user004;María;Smith;user004@mail.com;XWikiAllGroup
