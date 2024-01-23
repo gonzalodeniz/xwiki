@@ -32,7 +32,7 @@ fi
 
 # Backup Data
 BACKUP_DATA=$BACKUP_DIR"/xwiki_data.tar.gz"
-TAR_DATA_CMD="tar czf - -C /usr/local/ xwiki"
+TAR_DATA_CMD="tar czf - --exclude='xwiki/data/cache' -C /usr/local/ xwiki"
 
 docker exec -i $XWIKI_DOCKER $TAR_DATA_CMD > $BACKUP_DATA
 
