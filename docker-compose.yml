@@ -84,7 +84,16 @@ services:
       xwiki-network:
         aliases:
           - httpd-gobcan
-
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: xwiki-mailhog
+    restart: always
+    ports:
+      - 1025:1025
+      - 8025:8025         
+    networks:
+      xwiki-network:
+        
 networks:
   xwiki-network:
     driver: bridge
