@@ -1,3 +1,10 @@
+''' Clase para autenticarse con un CAS Apereo utilizando el protocolo CAS, 
+    y para gestionar objetos y páginas.
+
+    Autor: Gonzalo Déniz (Inerza, SA)
+    Fecha: Enero 2024
+'''
+
 import requests
 from urllib.parse import urlencode, quote
 import csv

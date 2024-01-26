@@ -1,6 +1,10 @@
+''' Crea usuarios en XWiki desde un CSV, utilizando las API.
+
+    Autor: Gonzalo Déniz (Inerza, SA)
+    Fecha: Enero 2024
+'''
 
 from xwiki_api_class import XWikiAPI
-
 
 def importa_usuarios_csv(cnx:dict, file_csv:str) -> None:
     print('Comienza importación de usuarios')
@@ -20,10 +24,6 @@ def main():
     
     file_csv = 'api-rest//usuarios.csv'
     importa_usuarios_csv(cnx, file_csv)
-
-
-
-
 
 
 if __name__ == "__main__":
