@@ -6,9 +6,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:      
-      - POSTGRES_PASSWORD=xwiki
-      - POSTGRES_USER=xwiki
-      - POSTGRES_DB=xwiki
+      - POSTGRES_PASSWORD=xwikipass
+      - POSTGRES_USER=xwikiuser
+      - POSTGRES_DB=xwikidb
       - POSTGRES_INITDB_ARGS="--encoding=UTF8"
     networks:
       xwiki-network:
@@ -32,11 +32,13 @@ services:
       - xwiki_data:/usr/local/xwiki
       - ./xwiki-config/xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg     
       - ./xwiki-config/xwiki.properties:/usr/local/xwiki/data/xwiki.properties       
+      - ./xwiki-config/hibernate.cfg.xml:/usr/local/xwiki/data/hibernate.cfg.xml
       - ./xwiki-config/cacerts:/opt/java/openjdk/lib/security/cacerts   
+      
     environment:
-      DB_USER: xwiki
-      DB_PASSWORD: xwiki
-      DB_DATABASE: xwiki
+      DB_USER: xwikiuser
+      DB_PASSWORD: xwikipass
+      DB_DATABASE: xwikidb
       DB_HOST: xwiki-postgres
       CONTEXT_PATH: aplicaciones#ciberwiki
 
