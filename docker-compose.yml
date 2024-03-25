@@ -18,7 +18,7 @@ services:
       - "5432:5432"
 
   xwiki:
-    image: xwiki:stable-postgres-tomcat
+    image: xwiki:16.0.0-postgres-tomcat
     container_name: xwiki
     depends_on:
       - xwiki-postgres
@@ -34,6 +34,7 @@ services:
       - ./xwiki-config/xwiki.properties:/usr/local/xwiki/data/xwiki.properties       
       - ./xwiki-config/hibernate.cfg.xml:/usr/local/xwiki/data/hibernate.cfg.xml
       - ./xwiki-config/cacerts:/opt/java/openjdk/lib/security/cacerts   
+      - ./xwiki-config/server.xml:/usr/local/tomcat/conf/server.xml      
       
     environment:
       DB_USER: xwikiuser
