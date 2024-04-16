@@ -30,6 +30,7 @@ services:
       - "8080:8080"
     volumes:
       - xwiki_data:/usr/local/xwiki
+      - xwiki_logs:/usr/local/tomcat/logs
       - ./xwiki-config/xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg     
       - ./xwiki-config/xwiki.properties:/usr/local/xwiki/data/xwiki.properties       
       - ./xwiki-config/hibernate.cfg.xml:/usr/local/xwiki/data/hibernate.cfg.xml
@@ -102,6 +103,7 @@ networks:
 
 volumes:
   xwiki_data:
+  xwiki_logs:
   postgres_data:
   httpd_conf:
   httpd_log:
