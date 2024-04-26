@@ -1,4 +1,4 @@
-FROM httpd:2.4
+FROM httpd:latest
 
 RUN apt update; apt install -y libapache2-mod-auth-cas; chmod a+wx /var/cache/apache2/mod_auth_cas/
 RUN mkdir -p /etc/ssl/certs/

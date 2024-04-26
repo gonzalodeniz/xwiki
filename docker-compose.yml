@@ -18,7 +18,7 @@ services:
       - "5432:5432"
 
   xwiki:
-    image: xwiki:16.0.0-postgres-tomcat
+    image: xwiki:16.2.0-postgres-tomcat
     container_name: xwiki
     depends_on:
       - xwiki-postgres
