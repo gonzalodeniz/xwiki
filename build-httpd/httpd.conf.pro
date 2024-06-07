@@ -591,11 +591,11 @@ Listen 443
     # Redireccion del logout al CAS corporativo   
     # Wiki principal
     RewriteCond %{QUERY_STRING} (^|&)xredirect=%2Faplicaciones/ciberwiki%2Fbin
-    RewriteRule ^/aplicaciones/ciberwiki/bin/logout/XWiki/XWikiLogout$ https://www-pre.gobiernodecanarias.net/sso/logout?service=https://www-pre.gobiernodecanarias.net/aplicaciones/ciberwiki/bin/logout/XWiki/XWikiLogout?xredirect=/aplicaciones/ciberwiki/ [R=301,L,NE]
+    RewriteRule ^/aplicaciones/ciberwiki/bin/logout/XWiki/XWikiLogout$ https://www.gobiernodecanarias.net/sso/logout?service=https://www.gobiernodecanarias.net/aplicaciones/ciberwiki/bin/logout/XWiki/XWikiLogout?xredirect=/aplicaciones/ciberwiki/ [R=301,L,NE]
 
     # Subwiki
     RewriteCond %{QUERY_STRING} (^|&)xredirect=%2Faplicaciones/ciberwiki%2Fwiki
-    RewriteRule ^/aplicaciones/ciberwiki/wiki/(.*)/logout/XWiki/XWikiLogout$ https://www-pre.gobiernodecanarias.net/sso/logout?service=https://www-pre.gobiernodecanarias.net/aplicaciones/ciberwiki/wiki/$1/logout/XWiki/XWikiLogout?xredirect=/aplicaciones/ciberwiki/wiki/$1/ [R=301,L,NE]
+    RewriteRule ^/aplicaciones/ciberwiki/wiki/(.*)/logout/XWiki/XWikiLogout$ https://www.gobiernodecanarias.net/sso/logout?service=https://www.gobiernodecanarias.net/aplicaciones/ciberwiki/wiki/$1/logout/XWiki/XWikiLogout?xredirect=/aplicaciones/ciberwiki/wiki/$1/ [R=301,L,NE]
 
     	
     ProxyRequests Off

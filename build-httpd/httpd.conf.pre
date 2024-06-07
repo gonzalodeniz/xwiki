@@ -49,7 +49,7 @@ ServerRoot "/usr/local/apache2"
 # prevent Apache from glomming onto all bound IP addresses.
 #
 #Listen 12.34.56.78:80
-# Listen 80
+Listen 80
 
 #
 # Dynamic Shared Object (DSO) Support
@@ -114,7 +114,7 @@ LoadModule reqtimeout_module modules/mod_reqtimeout.so
 #LoadModule include_module modules/mod_include.so
 LoadModule filter_module modules/mod_filter.so
 #LoadModule reflector_module modules/mod_reflector.so
-#LoadModule substitute_module modules/mod_substitute.so
+LoadModule substitute_module modules/mod_substitute.so
 #LoadModule sed_module modules/mod_sed.so
 #LoadModule charset_lite_module modules/mod_charset_lite.so
 #LoadModule deflate_module modules/mod_deflate.so
@@ -552,33 +552,70 @@ SSLRandomSeed startup builtin
 SSLRandomSeed connect builtin
 </IfModule>
 
-ServerName gobcan.mv
 
+
+########################################################
+# Configuracion HTTP a HTTPS
+########################################################
 <VirtualHost *:80>
   RewriteEngine On
   RewriteCond %{HTTPS} off
   RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
 </VirtualHost>
 
-ProxyRequests off 
-Listen 10443
-<VirtualHost *:10443>
-    SSLEngine on
-    SSLProxyEngine on
-    SSLProxyVerify none 
-    SSLProxyCheckPeerCN off
-    SSLProxyCheckPeerName off
 
-    SSLCertificateFile "conf/gobcan.crt"
-    SSLCertificateKeyFile "conf/gobcan.key"
-	LogLevel Debug
+########################################################
+# Configuracion PROXY REVERSE HTTPS
+########################################################
+Listen 443
+<VirtualHost *:443>
+    LogLevel debug
+
+    # Certificado
+    SSLEngine on
+    
+    # Desactiva toda verificacion
+    SSLProxyEngine on
+
+    SSLCertificateFile "conf/cert.crt"
+    SSLCertificateKeyFile "conf/cert.key"
 
     RewriteEngine on
-    # # Inserta la barra final si no se pone
+    # Inserta la barra final si no se pone
     RewriteRule ^/aplicaciones/ciberwiki$ /aplicaciones/ciberwiki/ [R]
+    
+    # Sustituye en el cuerpo html las direcciones %2F por la barra
+    SetOutputFilter SUBSTITUTE
+    Substitute "s|aplicaciones%2Fciberwiki|aplicaciones/ciberwiki|i"
 
+    # Redireccion del logout al CAS corporativo   
+    # Wiki principal
+    RewriteCond %{QUERY_STRING} (^|&)xredirect=%2Faplicaciones/ciberwiki%2Fbin
+    RewriteRule ^/aplicaciones/ciberwiki/bin/logout/XWiki/XWikiLogout$ https://www-pre.gobiernodecanarias.net/sso/logout?service=https://www-pre.gobiernodecanarias.net/aplicaciones/ciberwiki/bin/logout/XWiki/XWikiLogout?xredirect=/aplicaciones/ciberwiki/ [R=301,L,NE]
+
+    # Subwiki
+    RewriteCond %{QUERY_STRING} (^|&)xredirect=%2Faplicaciones/ciberwiki%2Fwiki
+    RewriteRule ^/aplicaciones/ciberwiki/wiki/(.*)/logout/XWiki/XWikiLogout$ https://www-pre.gobiernodecanarias.net/sso/logout?service=https://www-pre.gobiernodecanarias.net/aplicaciones/ciberwiki/wiki/$1/logout/XWiki/XWikiLogout?xredirect=/aplicaciones/ciberwiki/wiki/$1/ [R=301,L,NE]
+
+    	
+    ProxyRequests Off
     ProxyPreserveHost On
-    ProxyPass /aplicaciones/ciberwiki/ https://xwiki-httpd/aplicaciones/ciberwiki/ 
-    ProxyPassReverse /aplicaciones/ciberwiki/ https://xwiki-httpd/aplicaciones/ciberwiki/
+    # Proxy Reverse
+    ProxyPass /aplicaciones/ciberwiki/ http://xwiki:8080/aplicaciones/ciberwiki/ nocanon
+    ProxyPassReverse /aplicaciones/ciberwiki/ http://xwiki:8080/aplicaciones/ciberwiki/
+   
+    # Modifications de headers attribute Secure
+    Header edit Set-Cookie ^(.*)$ $1;Secure;HttpOnly
+
+   #Desactivar protocolos de cifrado inseguro
+	SSLProtocol -all +TLSv1.2 +TLSv1.3
+	SSLCipherSuite HIGH:!aNULL:!MD5:!3DES
+	SSLHonorCipherOrder on
 
 </VirtualHost>
+
+
+
+
+
+

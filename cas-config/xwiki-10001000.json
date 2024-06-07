@@ -1,8 +1,0 @@
-{
-  "@class" : "org.apereo.cas.services.RegexRegisteredService",
-  "serviceId" : "https?://(.*?)(:\\d+)?/.*",
-  "name" : "XWiki Docker",
-  "id" : 10001000,
-  "description" : "XWiki Docker",
-  "evaluationOrder" : 10000
-}

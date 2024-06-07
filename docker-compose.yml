@@ -1,111 +1,46 @@
 version: '3.8'
 services:
-  xwiki-postgres:
-    image: "postgres:16"
-    container_name: xwiki-postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:      
-      - POSTGRES_PASSWORD=xwikipass
-      - POSTGRES_USER=xwikiuser
-      - POSTGRES_DB=xwikidb
-      - POSTGRES_INITDB_ARGS="--encoding=UTF8"
-    networks:
-      xwiki-network:
-        aliases:
-          - postgres
-    ports:
-      - "5432:5432"
 
   xwiki:
-    image: xwiki:16.2.0-postgres-tomcat
+    image: ${DOCKER_REPOSITORY}/xwiki:${XWIKI_VER}    
     container_name: xwiki
-    depends_on:
-      - xwiki-postgres
+    restart: always  
     networks:
       xwiki-network:
         aliases:
           - xwiki      
-    ports:
-      - "8080:8080"
     volumes:
-      - xwiki_data:/usr/local/xwiki
-      - xwiki_logs:/usr/local/tomcat/logs
-      - ./xwiki-config/xwiki.cfg:/usr/local/xwiki/data/xwiki.cfg     
-      - ./xwiki-config/xwiki.properties:/usr/local/xwiki/data/xwiki.properties       
-      - ./xwiki-config/hibernate.cfg.xml:/usr/local/xwiki/data/hibernate.cfg.xml
-      - ./xwiki-config/cacerts:/opt/java/openjdk/lib/security/cacerts   
-      - ./xwiki-config/server.xml:/usr/local/tomcat/conf/server.xml      
-      
+      - ${XWIKI_DATA}:/usr/local/xwiki
+      - ./xwiki-config/xwiki.cfg.${ENTORNO}:/usr/local/xwiki/data/xwiki.cfg     
+      - ./xwiki-config/xwiki.properties.${ENTORNO}:/usr/local/xwiki/data/xwiki.properties       
+      - ./xwiki-config/cacerts.${ENTORNO}:/opt/java/openjdk/lib/security/cacerts   
+      - ./xwiki-config/docker-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh
     environment:
-      DB_USER: xwikiuser
-      DB_PASSWORD: xwikipass
-      DB_DATABASE: xwikidb
-      DB_HOST: xwiki-postgres
-      CONTEXT_PATH: aplicaciones#ciberwiki
-
-  xwiki-cas:    
-    image: apereo/cas:v5.0.6
-    container_name: xwiki-cas         
-    ports:
-      - ${CAS_HTTP_PORT:-9080}:8080
-      - ${CAS_HTTPS_PORT:-8443}:8443
-    volumes:
-    - ./cas-config/config:/cas-overlay/etc/cas/config
-    - ./cas-config/application.properties:/cas-overlay/src/main/resources/application.properties
-    - ./cas-config/thekeystore:/etc/cas/thekeystore
-    - ./cas-config/xwiki-10001000.json:/cas-overlay/src/main/resources/services/xwiki-10001000.json
-    networks:
-      xwiki-network:
-        aliases:
-          - cas
+      - DB_USER=${XWIKI_DB_USER}
+      - DB_PASSWORD=${XWIKI_DB_PASS}
+      - DB_DATABASE=${XWIKI_DB_DATABASE}
+      - DB_HOST=${XWIKI_DB_HOST}
+      - DB_PORT=${XWIKI_DB_PORT}
+      - CONTEXT_PATH=aplicaciones#ciberwiki
 
   xwiki-httpd:
-    build:
-      context: ./build-httpd
+    image: ${DOCKER_REPOSITORY}/httpd-ciberwiki:${HTTPD_VER}
     container_name: xwiki-httpd
+    restart: always  
     ports:
       - 443:443
       - 80:80    
     volumes:
-      - ./build-httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf
-      - httpd_conf:/usr/local/apache2/conf
-      - httpd_log:/usr/local/apache2/logs
+      - ./build-httpd/httpd.conf.${ENTORNO}:/usr/local/apache2/conf/httpd.conf
+      - ./build-httpd/${CERT_CRT}:/usr/local/apache2/conf/cert.crt
+      - ./build-httpd/${CERT_KEY}:/usr/local/apache2/conf/cert.key
     networks:
       xwiki-network:
         aliases:
           - httpd
 
-  xwiki-httpd-gobcan:
-    build:
-      context: ./build-httpd-gobcan
-    container_name: xwiki-httpd-gobcan
-    ports:
-      - 10443:10443             
-    volumes:
-      - ./build-httpd-gobcan/httpd.conf:/usr/local/apache2/conf/httpd.conf         
-    networks:
-      xwiki-network:
-        aliases:
-          - httpd-gobcan
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: xwiki-mailhog    
-    ports:
-      - 1025:1025
-      - 8025:8025         
-    networks:
-      xwiki-network:
-        
+
 networks:
   xwiki-network:
     driver: bridge
-
-volumes:
-  xwiki_data:
-  xwiki_logs:
-  postgres_data:
-  httpd_conf:
-  httpd_log:
-  
 
